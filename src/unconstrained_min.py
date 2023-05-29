@@ -1,18 +1,40 @@
 import numpy as np
 
 class UnconstrainedMin(object):
-    WOLFE_CONST = 0.01
-    BACKTRACKING = 0.5
+    C1 = 0.01
+    C2 = 0.5
     ALPHA = 1
 
     def __init__(self, obj_tol=1e-8 ,param_tol=1e-12):
         self._obj_tol = obj_tol
         self._param_tol = param_tol
 
-    def check_wolfe(self, f_x, g_x, f_x_next, g_x_next, p):
-        cond1 = f_x_next <= f_x + self.BACKTRACKING * self.ALPHA * g_x.T @ p
-        cond2 = g_x_next.T @ p >= self.WOLFE_CONST * g_x.T @ p
+    def wolfe_conds(self, f_x, g_x, f_x_next, g_x_next, p, alpha):
+        cond1 = f_x_next <= f_x + self.C2 * alpha * g_x.T @ p
+        cond2 = g_x_next.T @ p >= self.C2 * g_x.T @ p
         return cond1 and cond2
+
+    def find_next(self, x, f, p):
+        """
+        Find alpha with wolfe condsm and return x_next and f(x_next)
+        """
+        alpha = 1
+        wolfe_conds_set = False
+        f_x, g_x, _ = f(x)
+        while not wolfe_conds_set:
+            x_next = x + alpha * p
+            f_x_next, g_x_next, _ = f(x_next)
+            wolfe_conds_set = self.wolfe_conds(f_x, g_x, f_x_next, g_x_next, p, alpha)
+            alpha *= 0.5
+
+        return x_next, f_x_next
+
+    def check_tol(self, x, x_next, f_x, f_x_next):
+        if np.linalg.norm(x - x_next) < self._param_tol:
+            return True
+        if np.abs(f_x - f_x_next) < self._obj_tol:
+            return True
+        return False
 
     def line_search_min(self, minimizer, f, x0, max_iter=100):
         iter = 0
@@ -21,11 +43,9 @@ class UnconstrainedMin(object):
         record = []
         while not success and iter < max_iter:
             p = minimizer(f, x)
-            print(f"Minimizer: p={p}")
-            x_next = x + self.ALPHA * p
-            f_x, g_x, _ = f(x, should_hessian=False)
-            f_x_next, g_x_next, _ = f(x_next, should_hessian=False)
-            success = self.check_wolfe(f_x, g_x, f_x_next, g_x_next, p)
+            f_x, _, _ = f(x, should_hessian=False)
+            x_next, f_x_next = self.find_next(x, f, p)
+            success = self.check_tol(x, x_next, f_x, f_x_next)
             print(f"Iteration {iter}: x={x}, f(x)={f_x}")
             record.append((x, f_x))
             x = x_next
@@ -41,4 +61,6 @@ class UnconstrainedMin(object):
         _, g, h = f(x, should_hessian=True)
         return -1 * np.linalg.inv(h) @ g
         
-    # def 
+
+    def bgfs(self, f, x, b):
+        pass

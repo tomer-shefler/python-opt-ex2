@@ -1,6 +1,6 @@
 import unittest
-import exmaples
 import numpy as np
+from tests import exmaples
 from src import unconstrained_min
 
 
