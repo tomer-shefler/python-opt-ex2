@@ -3,12 +3,11 @@ import numpy as np
 class UnconstrainedMin(object):
     C1 = 0.01
     C2 = 0.5
-    ALPHA = 1
 
     def __init__(self, obj_tol=1e-8 ,param_tol=1e-12):
         self._obj_tol = obj_tol
         self._param_tol = param_tol
-        self._b0 = np.eye
+        self.minimizers = [self.gradient_descent, self.newton, self.bgfs, self.sr1]
 
     def wolfe_conds(self, f_x, g_x, f_x_next, g_x_next, p, alpha):
         cond1 = f_x_next <= f_x + self.C2 * alpha * g_x.T @ p
@@ -26,8 +25,7 @@ class UnconstrainedMin(object):
             x_next = x + alpha * p
             f_x_next, g_x_next, _ = f(x_next)
             wolfe_conds_set = self.wolfe_conds(f_x, g_x, f_x_next, g_x_next, p, alpha)
-            alpha *= 0.5
-            if alpha == 0: wolfe_conds_set = True
+            alpha /= 2
 
         return x_next, f_x_next, g_x_next
 

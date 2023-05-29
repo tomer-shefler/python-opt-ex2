@@ -9,10 +9,9 @@ class TestUnconstrainedMin(unittest.TestCase):
         self.u = unconstrained_min.UnconstrainedMin()
 
     def _test_f(self, f, x0=np.array([1, 1], dtype='int64'), max_iter=100):
-        self.u.line_search_min(self.u.gradient_descent, f, x0, max_iter=max_iter)
-        # self.u.line_search_min(self.u.newton ,f, x0, max_iter=max_iter)
-        self.u.line_search_min(self.u.bgfs ,f, x0, max_iter=max_iter)
-        self.u.line_search_min(self.u.sr1 ,f, x0, max_iter=max_iter)
+        for minimizer in self.u.minimizers:
+            if minimizer == self.u.newton: continue # Skip newton for now
+            self.u.line_search_min(minimizer ,f, x0, max_iter=max_iter)
 
     def test_f1(self):
         self._test_f(exmaples.f1)
