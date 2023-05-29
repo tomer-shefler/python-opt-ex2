@@ -21,7 +21,7 @@ class UnconstrainedMin(object):
         record = []
         while not success and iter < max_iter:
             p = minimizer(f, x)
-            print(f"Minimizer: p={p}x")
+            print(f"Minimizer: p={p}")
             x_next = x + self.ALPHA * p
             f_x, g_x, _ = f(x, should_hessian=False)
             f_x_next, g_x_next, _ = f(x_next, should_hessian=False)
