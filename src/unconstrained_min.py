@@ -27,6 +27,7 @@ class UnconstrainedMin(object):
             f_x_next, g_x_next, _ = f(x_next)
             wolfe_conds_set = self.wolfe_conds(f_x, g_x, f_x_next, g_x_next, p, alpha)
             alpha *= 0.5
+            if alpha == 0: wolfe_conds_set = True
 
         return x_next, f_x_next, g_x_next
 
@@ -47,11 +48,19 @@ class UnconstrainedMin(object):
             p = minimizer(f, x, b)
             f_x, g_x, _ = f(x, should_hessian=False)
             x_next, f_x_next, g_x_next = self.find_next(x, f, p)
+
+            # TODO: fix this ugly hack
             if minimizer == self.bgfs:
                 s = x_next - x
                 y = g_x_next - g_x
                 b += -1 * (b @ s @ s.T * b) / (s.T @ b @ s)
                 b += (y @ y.T) / (y.T @ s)
+            if minimizer == self.sr1:
+                s = x_next - x
+                y = g_x_next - g_x
+                y_minus_bs = y - b @ s
+                b += (y_minus_bs @ y_minus_bs.T) / (y_minus_bs.T @ s)
+
             success = self.check_tol(x, x_next, f_x, f_x_next)
             print(f"Iteration {iter}: x={x}, f(x)={f_x}")
             record.append((x, f_x))
@@ -73,3 +82,5 @@ class UnconstrainedMin(object):
         f_x, g_x, _ = f(x)
         return -b @ g_x
         
+    def sr1(self, f, x, b):
+        return self.bgfs(f, x, b)
