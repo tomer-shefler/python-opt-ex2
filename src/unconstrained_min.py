@@ -43,22 +43,8 @@ class UnconstrainedMin(object):
         b = np.eye(len(x))
         record = []
         while not success and iter < max_iter:
-            p = minimizer(f, x, b)
-            f_x, g_x, _ = f(x, should_hessian=False)
-            x_next, f_x_next, g_x_next = self.find_next(x, f, p)
-
-            # TODO: fix this ugly hack
-            if minimizer == self.bgfs:
-                s = x_next - x
-                y = g_x_next - g_x
-                b += -1 * (b @ s @ s.T * b) / (s.T @ b @ s)
-                b += (y @ y.T) / (y.T @ s)
-            if minimizer == self.sr1:
-                s = x_next - x
-                y = g_x_next - g_x
-                y_minus_bs = y - b @ s
-                b += (y_minus_bs @ y_minus_bs.T) / (y_minus_bs.T @ s)
-
+            f_x, _, _ = f(x)
+            x_next, f_x_next, b = minimizer(f, x, b)
             success = self.check_tol(x, x_next, f_x, f_x_next)
             print(f"Iteration {iter}: x={x}, f(x)={f_x}")
             record.append((x, f_x))
@@ -68,17 +54,33 @@ class UnconstrainedMin(object):
         return success, x, f_x, record
 
     def gradient_descent(self, f, x, *args):
-        _, gradient, _ = f(x)
-        return -1 * gradient
+        f_x, g_x, _ = f(x)
+        p = -1 * g_x
+        x_next, f_x_next, g_x_next = self.find_next(x, f, p)
+        return x_next, f_x_next, 0
 
     def newton(self, f, x, *args):
-        _, g, h = f(x, should_hessian=True)
-        return -1 * np.linalg.inv(h) @ g
+        f_x, g_x, h_x = f(x, should_hessian=True)
+        p = -1 * np.linalg.inv(h_h) @ g_x
+        x_next, f_x_next, g_x_next = self.find_next(x, f, p)
+        return x_next, f_x_next, 0
         
-
     def bgfs(self, f, x, b):
         f_x, g_x, _ = f(x)
-        return -b @ g_x
-        
+        p = -b @ g_x
+        x_next, f_x_next, g_x_next = self.find_next(x, f, p)
+        s = x_next - x
+        y = g_x_next - g_x
+        b += -1 * (b @ s @ s.T * b) / (s.T @ b @ s)
+        b += (y @ y.T) / (y.T @ s)
+        return x_next, f_x_next, b
+
     def sr1(self, f, x, b):
-        return self.bgfs(f, x, b)
+        f_x, g_x, _ = f(x)
+        p = -b @ g_x
+        x_next, f_x_next, g_x_next = self.find_next(x, f, p)
+        s = x_next - x
+        y = g_x_next - g_x
+        y_minus_bs = y - b @ s
+        b += (y_minus_bs @ y_minus_bs.T) / (y_minus_bs.T @ s)
+        return x_next, f_x_next, b
