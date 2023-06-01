@@ -51,7 +51,34 @@ def rosenbrock(x, should_hessian=False):
     else: h = 0
     return f, g, h
 
+def vect(x, should_hessian=False):
+    a = np.array([3, 4])
+    f = a.T @ x
+    g = a
+    h = 0
+    if should_hessian:
+        h = np.zeros((2,2))
+    return f, g, h
 
+def e_func(x, should_hessian=False):
+    x, y = x[0], x[1]
+    e = np.e
+    f = e ** (x + 3*y - 0.1) + e ** (x - 3*y - 0.1) + e ** (-x - 0.1)
+    g = np.array([
+        e ** (x + 3*y - 0.1) + e ** (x - 3*y - 0.1) - e ** (-x - 0.1),
+        3*e ** (x + 3*y - 0.1) - 3*e ** (x - 3*y - 0.1)
+    ])
+    h = 0
+    if should_hessian:
+        h = np.array([[
+            e ** (x + 3*y - 0.1) + e ** (x - 3*y - 0.1) - e ** (-x - 0.1),
+            3*e ** (x + 3*y - 0.1) - 3*e ** (x - 3*y - 0.1)
+        ], [
+            3*e ** (x + 3*y - 0.1) - 3*e ** (x - 3*y - 0.1),
+            9*e ** (x + 3*y - 0.1) + 9*e ** (x - 3*y - 0.1),
+        ]])
+
+    return f, g, h
 
 from src import unconstrained_min
 

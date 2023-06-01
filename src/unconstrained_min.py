@@ -7,7 +7,11 @@ class UnconstrainedMin(object):
     def __init__(self, obj_tol=1e-8 ,param_tol=1e-12):
         self._obj_tol = obj_tol
         self._param_tol = param_tol
-        self.minimizers = [self.gradient_descent, self.newton, self.bgfs, self.sr1]
+        self.minimizers = [
+            self.gradient_descent,
+            # self.newton,
+            self.bgfs,
+            self.sr1]
 
     def wolfe_conds(self, f_x, g_x, f_x_next, g_x_next, p, alpha):
         cond1 = f_x_next <= f_x + self.C2 * alpha * g_x.T @ p
@@ -16,7 +20,7 @@ class UnconstrainedMin(object):
 
     def find_next(self, x, f, p):
         """
-        Find alpha with wolfe condsm and return x_next and f(x_next)
+        Find alpha with wolfe conds and return x_next and f(x_next)
         """
         alpha = 1
         wolfe_conds_set = False
@@ -26,6 +30,9 @@ class UnconstrainedMin(object):
             f_x_next, g_x_next, _ = f(x_next)
             wolfe_conds_set = self.wolfe_conds(f_x, g_x, f_x_next, g_x_next, p, alpha)
             alpha /= 2
+            if alpha == 0:
+                print("alpha is zero")
+                break
 
         return x_next, f_x_next, g_x_next
 
@@ -61,7 +68,7 @@ class UnconstrainedMin(object):
 
     def newton(self, f, x, *args):
         f_x, g_x, h_x = f(x, should_hessian=True)
-        p = -1 * np.linalg.inv(h_h) @ g_x
+        p = -1 * np.linalg.inv(h_x) @ g_x
         x_next, f_x_next, g_x_next = self.find_next(x, f, p)
         return x_next, f_x_next, 0
         
