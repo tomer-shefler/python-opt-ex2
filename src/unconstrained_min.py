@@ -9,7 +9,7 @@ class UnconstrainedMin(object):
         self._param_tol = param_tol
         self.minimizers = [
             self.gradient_descent,
-            # self.newton,
+            self.newton,
             self.bgfs,
             self.sr1]
 
@@ -31,8 +31,7 @@ class UnconstrainedMin(object):
             wolfe_conds_set = self.wolfe_conds(f_x, g_x, f_x_next, g_x_next, p, alpha)
             alpha /= 2
             if alpha == 0:
-                print("alpha is zero")
-                break
+                raise Exception("alpha is zero")
 
         return x_next, f_x_next, g_x_next
 
