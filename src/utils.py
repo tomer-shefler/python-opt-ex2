@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-
 def plot_contour_function(objective_func):
     
     x = np.linspace(-6, 6, 100)
@@ -21,14 +20,6 @@ def plot_contour_function(objective_func):
     plt.colorbar()
     plt.show()
 
-def plot_function_values(records):
-    plt.figure()
-    for method_name, values in iterations.items():
-        plt.plot(range(len(values)), values, label=method_name)
-    plt.xlabel('Iteration')
-    plt.ylabel('Function Value')
-    plt.legend()
-    plt.show()
 
 from tests import examples
 

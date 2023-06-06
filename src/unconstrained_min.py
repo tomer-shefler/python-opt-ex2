@@ -2,7 +2,7 @@ import numpy as np
 
 class UnconstrainedMin(object):
     C1 = 0.01
-    C2 = 0.5
+    BACKTRACKING = 0.5
 
     def __init__(self, obj_tol=1e-8 ,param_tol=1e-12):
         self._obj_tol = obj_tol
@@ -13,10 +13,8 @@ class UnconstrainedMin(object):
             self.bgfs,
             self.sr1]
 
-    def wolfe_conds(self, f_x, g_x, f_x_next, g_x_next, p, alpha):
-        cond1 = f_x_next <= f_x + self.C2 * alpha * g_x.T @ p
-        cond2 = g_x_next.T @ p >= self.C2 * g_x.T @ p
-        return cond1 and cond2
+    def wolfe_cond(self, f_x, g_x, f_x_next, p, alpha):
+        return f_x_next <= f_x + self.C1 * alpha * g_x.T @ p
 
     def find_next(self, x, f, p):
         """
@@ -28,8 +26,8 @@ class UnconstrainedMin(object):
         while not wolfe_conds_set:
             x_next = x + alpha * p
             f_x_next, g_x_next, _ = f(x_next)
-            wolfe_conds_set = self.wolfe_conds(f_x, g_x, f_x_next, g_x_next, p, alpha)
-            alpha /= 2
+            wolfe_conds_set = self.wolfe_cond(f_x, g_x, f_x_next, p, alpha)
+            alpha *= self.BACKTRACKING
             if alpha == 0:
                 raise Exception("alpha is zero")
 
